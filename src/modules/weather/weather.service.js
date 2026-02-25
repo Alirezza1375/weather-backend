@@ -1,13 +1,17 @@
 import { AppError } from "../../utils/AppError.js";
+import { normalizeWeatherData } from "../../utils/normalizeWeatherData.js";
 
 export const fetchWeather = async (city) => {
   if (!city) {
-    throw new AppError("City is required", 404);
+    throw new AppError("city is required", 404);
+  } else if (city.length < 2 || typeof city !== "string") {
+    throw new AppError("City is not valid", 400);
   }
-  const API_KEY = process.env.OPENWEATHER_API_KEY;
-  const geoURL = `http://api.openweathermap.org/geo/1.0/direct?q=${city}&limit=1&appid=${API_KEY}`;
 
-  const geoRes = await fetch(geoURL);
+  const API_KEY = process.env.OPENWEATHER_API_KEY;
+  const geoAPI = `http://api.openweathermap.org/geo/1.0/direct?q=${city}&limit=1&appid=${API_KEY}`;
+
+  const geoRes = await fetch(geoAPI);
 
   if (!geoRes.ok) {
     throw new AppError("faild to fetch location data", 500);
@@ -17,27 +21,35 @@ export const fetchWeather = async (city) => {
   if (!geoData.length) {
     throw new AppError("City not found", 404);
   }
+  const { lat, lon, country } = geoData[0];
 
-  const { lat, lon } = geoData[0];
+  const weatherAPI = `https://api.openweathermap.org/data/2.5/weather?lat=${lat}&lon=${lon}&units=metric&appid=${API_KEY}`;
 
-  const weatherURL = `https://api.openweathermap.org/data/2.5/weather?lat=${lat}&lon=${lon}&units=metric&appid=${API_KEY}`;
-
-  const weatherRes = await fetch(weatherURL);
+  const weatherRes = await fetch(weatherAPI);
 
   if (!weatherRes.ok) {
     throw new AppError("faild to fetch weather data", 500);
   }
+  const rawWeatherData = await weatherRes.json();
 
-  const weatehrData = await weatherRes.json();
+  const normalizedWeatherData = normalizeWeatherData(
+    rawWeatherData,
+    city,
+    country
+  );
 
-  // normalize weather data in an arrow func
-  // return the clean structured data
-
-  return weatehrData;
+  return normalizedWeatherData;
 };
 
-// takes city and returns the weather data
-// api to get the lat and lon http://api.openweathermap.org/geo/1.0/direct?q={city name},{state code},{country code}&limit={limit}&appid={API key}
-// current weather api https://api.openweathermap.org/data/2.5/weather?lat={lat}&lon={lon}&units=metric&appid={API_KEY}
-// 2.5‑Day / 3‑Hour Forecast API https://api.openweathermap.org/data/2.5/forecast?lat={lat}&lon={lon}&units=metric&appid={API_KEY}
-// Air Pollution API https://api.openweathermap.org/data/2.5/air_pollution?lat={lat}&lon={lon}&appid={API_KEY}
+// fetchWeather func takes city
+// checks if city exist or is less than 2 charachter or there is number in city
+// else send a request to get {lat, lon}
+// check the response for handling errors
+// extract values from response
+// send another request to get weather data
+// check the response
+// normalize weather data
+// return normalized weather data
+
+// geoAPI => http://api.openweathermap.org/geo/1.0/direct?q={city name},{state code},{country code}&limit={limit}&appid={API key}
+// current weatherAPI => https://api.openweathermap.org/data/2.5/weather?lat={lat}&lon={lon}&units=metric&appid={API_KEY}

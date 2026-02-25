@@ -41,15 +41,5 @@ export const fetchWeather = async (city) => {
   return normalizedWeatherData;
 };
 
-// fetchWeather func takes city
-// checks if city exist or is less than 2 charachter or there is number in city
-// else send a request to get {lat, lon}
-// check the response for handling errors
-// extract values from response
-// send another request to get weather data
-// check the response
-// normalize weather data
-// return normalized weather data
-
 // geoAPI => http://api.openweathermap.org/geo/1.0/direct?q={city name},{state code},{country code}&limit={limit}&appid={API key}
 // current weatherAPI => https://api.openweathermap.org/data/2.5/weather?lat={lat}&lon={lon}&units=metric&appid={API_KEY}

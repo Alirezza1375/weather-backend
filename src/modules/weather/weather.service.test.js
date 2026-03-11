@@ -70,7 +70,7 @@ describe("fetchWeather", () => {
       .mockResolvedValueOnce({ ok: false })
       .mockResolvedValueOnce({ ok: true, json: () => [] });
 
-    await expect(fetchWeather("berlin")).rejects.toThrow(AppError);
+    await expect(fetchWeather()).rejects.toThrow(AppError);
   });
 
   test("throws AppError when city is not found", async () => {
@@ -79,14 +79,22 @@ describe("fetchWeather", () => {
         ok: true,
         json: () => [],
       })
-      .mockResolvedValueOnce({ ok: true });
+      .mockResolvedValueOnce({ ok: true, json: () => [] });
 
-    await expect(fetchWeather("berlin")).rejects.toThrow(AppError);
+    await expect(fetchWeather()).rejects.toThrow(AppError);
   });
 
   test("returns 400 for invalid city", async () => {
     const response = await request(app).get("/api/weather/1");
 
     expect(response.status).toBe(400);
+  });
+
+  test("throws AppError when city is invalid (name less than 2)", async () => {
+    await expect(fetchWeather("a")).rejects.toThrow(AppError);
+  });
+
+  test("throws AppError when city is invalid (number as city)", async () => {
+    await expect(fetchWeather(1)).rejects.toThrow(AppError);
   });
 });
